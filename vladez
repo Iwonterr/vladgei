@@ -1,0 +1,63 @@
+-- Ссылки на NPC и боссов
+local npc1 = workspace:WaitForChild("Valcure") -- Первоначальный NPC
+local npc2 = workspace:WaitForChild("Ussop") -- NPC, который вызывает босса
+local bossSpawnPoint = workspace:WaitForChild("BossSpawnPoint") -- Точка спавна босса
+local boss = nil -- Переменная для хранения босса
+
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+
+-- Функция телепортации к NPC
+local function teleportToNPC(npc)
+    character:SetPrimaryPartCFrame(npc.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0)) -- Телепортируем персонажа чуть выше
+end
+
+-- Функция для взаимодействия с NPC
+local function talkToNPC(npc)
+    -- Проверка, если персонаж близко к NPC
+    if (npc.HumanoidRootPart.Position - character.HumanoidRootPart.Position).Magnitude < 10 then
+        -- Взаимодействие с NPC (например, начать диалог или запустить событие квеста)
+        print("Говорим с NPC: " .. npc.Name)
+        return true
+    end
+    return false
+end
+
+-- Функция спауна босса с ваншотом
+local function spawnBoss()
+    boss = workspace:WaitForChild("BossTemplate"):Clone() -- Предположим, что босс хранится в шаблоне
+    boss.Parent = workspace
+    boss:SetPrimaryPartCFrame(bossSpawnPoint.CFrame) -- Спавним босса на нужной точке
+    print("Босс спаунен!")
+
+    -- Ваншотим босса: наносим урон, равный его здоровью, чтобы он умер сразу
+    if boss:FindFirstChild("Humanoid") then
+        local humanoid = boss.Humanoid
+        humanoid.Health = 5000  -- Устанавливаем здоровье босса в 0, чтобы он сразу умер
+    end
+end
+
+-- Главный цикл квеста
+while true do
+    -- 1. Телепортируемся к первому NPC и говорим с ним
+    teleportToNPC(npc1)
+    wait(1) -- Пауза для завершения телепортации
+    if talkToNPC(npc1) then
+        print("Квест начат! Переходим ко второму NPC.")
+        
+        -- 2. Телепортируемся ко второму NPC и говорим с ним
+        teleportToNPC(npc2)
+        wait(1) -- Пауза для завершения телепортации
+        if talkToNPC(npc2) then
+            print("Второй NPC активировал спаун босса!")
+            
+            -- 3. Спауним босса и ваншотим его
+            spawnBoss()
+            
+            -- 4. Завершаем квест
+            print("Квест завершен! Босс был побежден!")
+            break -- Завершаем квест
+        end
+    end
+end
